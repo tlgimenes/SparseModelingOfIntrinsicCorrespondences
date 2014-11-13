@@ -15,6 +15,11 @@
 
 #include <fstream>
 #include <string>
+#include <memory>
+
+#include "forward_backward_solver.hpp"
+#include "linear_assignement_solver.hpp"
+#include "model_to_real.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,9 +27,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-Eigen::MatrixXd V;
-Eigen::MatrixXi F;
-Eigen::MatrixXd C;
+/**
+ * Global variables 
+ * */
+std::shared_ptr<Eigen::MatrixXd> V;
+std::shared_ptr<Eigen::MatrixXi> F;
+std::shared_ptr<Eigen::MatrixXd> C;
+
+float lambda = 1;
+float mu = 1;
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,21 +50,34 @@ void read_input(int argc, const char** argv);
  */
 int main(int argc, const char **argv)
 {
+    // Allocates global shared_ptr 
+    V = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
+    F = std::make_shared<Eigen::MatrixXi>(Eigen::MatrixXi());
+    C = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
+
     // Load a mesh in OFF format
     read_input(argc, argv);
 
+    // Instantiates the solvers
+    ForwardBackwardSolver fbs(lambda, mu);
+    LinearAssignementSolver las;
+
+    // f : X -> R
+    // g : Y -> R
+    ModelToReal f(V,F),g(V,F);
+
     // Plot the mesh
     igl::Viewer viewer;
-    viewer.data.set_mesh(V, F);
+    viewer.data.set_mesh(*V, *F);
 
     // Use the z coordinate as a scalar field over the surface
-    Eigen::VectorXd Z = V.col(2);
+    Eigen::VectorXd Z = V->col(2);
 
     // Compute per-vertex colors
-    igl::jet(Z,true,C);
+    igl::jet(Z,true,*C);
 
     // Add per-vertex colors
-    viewer.data.set_colors(C);
+    viewer.data.set_colors(*C);
 
     // Launch the viewer
     viewer.launch();
@@ -75,5 +99,5 @@ void read_input(int argc, const char** argv)
         }
     }
 
-    igl::readOFF(path, V, F);
+    igl::readOFF(path, *V, *F);
 }

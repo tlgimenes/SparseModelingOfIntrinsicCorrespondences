@@ -14,9 +14,29 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
+#include <Eigen/Dense>
+#include <memory>
+
+////////////////////////////////////////////////////////////////////////////////////////
+
 class ModelToReal
 {
+    private:
+        std::shared_ptr<Eigen::MatrixXd> _coeffs, _base;
 
+    public:
+        /**
+         * Constructor: 
+         * @params V : Vertices of the model
+         * @params F : Faces of the model 
+         * */
+        ModelToReal(std::shared_ptr<Eigen::MatrixXd> &V, std::shared_ptr<Eigen::MatrixXi> &F);
+
+        /**
+         * Gets  
+         * */
+        std::shared_ptr<Eigen::MatrixXd>& coeffs();
+        std::shared_ptr<Eigen::MatrixXd>& base();
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -24,4 +44,3 @@ class ModelToReal
 #endif /* !MODEL_TO_REAL_HPP */
 
 ////////////////////////////////////////////////////////////////////////////////////////
-
