@@ -18,6 +18,7 @@ FIND_PATH(LIBIGL_INCLUDE_DIR igl/readOBJ.h
    $ENV{LIBIGL_ROOT}/include
    $ENV{LIBIGL_DIR}/include
    $ENV{LIBIGL_DIR}/inc
+   ${PROJECT_SOURCE_DIR}/external
    ${PROJECT_SOURCE_DIR}/../libigl/include
    ${PROJECT_SOURCE_DIR}/../../libigl/include
    ${PROJECT_SOURCE_DIR}/../../include
@@ -25,7 +26,7 @@ FIND_PATH(LIBIGL_INCLUDE_DIR igl/readOBJ.h
 
 if(LIBIGL_INCLUDE_DIR)
    set(LIBIGL_FOUND TRUE)
-   set(LIBIGL_INCLUDE_DIR ${LIBIGL_INCLUDE_DIR}  ${LIBIGL_INCLUDE_DIR}/external/Singular_Value_Decomposition)
+   set(LIBIGL_INCLUDE_DIR ${LIBIGL_INCLUDE_DIR}  ${PROJECT_SOURCE_DIR}/external/Singular_Value_Decomposition)
    #set(LIBIGL_SOURCES
    #   ${LIBIGL_INCLUDE_DIR}/igl/viewer/Viewer.cpp
    #)

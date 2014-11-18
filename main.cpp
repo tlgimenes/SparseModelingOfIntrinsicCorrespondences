@@ -23,16 +23,17 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-#define DEFAULT_MODEL_PATH "../models/0001.affine.1.off"
+#define DEFAULT_MODEL_PATH1 "../models/0001.affine.1.off"
+#define DEFAULT_MODEL_PATH2 "../models/0001.null.0.off"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Global variables 
  * */
-std::shared_ptr<Eigen::MatrixXd> V;
-std::shared_ptr<Eigen::MatrixXi> F;
-std::shared_ptr<Eigen::MatrixXd> C;
+std::shared_ptr<Eigen::MatrixXd> Xv, Yv;
+std::shared_ptr<Eigen::MatrixXi> Xf, Yf;
+std::shared_ptr<Eigen::MatrixXd> Xc, Yc;
 
 float lambda = 1;
 float mu = 1;
@@ -40,6 +41,9 @@ float mu = 1;
 ////////////////////////////////////////////////////////////////////////////////////////
 
 void read_input(int argc, const char** argv);
+bool key_down_cb(igl::Viewer& viewer, unsigned char key, int modifier);
+void set_model_1(igl::Viewer& viewer);
+void set_model_2(igl::Viewer& viewer);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,9 +55,12 @@ void read_input(int argc, const char** argv);
 int main(int argc, const char **argv)
 {
     // Allocates global shared_ptr 
-    V = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
-    F = std::make_shared<Eigen::MatrixXi>(Eigen::MatrixXi());
-    C = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
+    Xv = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
+    Xf = std::make_shared<Eigen::MatrixXi>(Eigen::MatrixXi());
+    Xc = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
+    Yv = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
+    Yf = std::make_shared<Eigen::MatrixXi>(Eigen::MatrixXi());
+    Yc = std::make_shared<Eigen::MatrixXd>(Eigen::MatrixXd());
 
     // Load a mesh in OFF format
     read_input(argc, argv);
@@ -64,20 +71,14 @@ int main(int argc, const char **argv)
 
     // f : X -> R
     // g : Y -> R
-    ModelToReal f(V,F),g(V,F);
+    ModelToReal f(Xv,Xf), g(Yv,Yf);
 
     // Plot the mesh
     igl::Viewer viewer;
-    viewer.data.set_mesh(*V, *F);
+    set_model_1(viewer);
 
-    // Use the z coordinate as a scalar field over the surface
-    Eigen::VectorXd Z = V->col(2);
-
-    // Compute per-vertex colors
-    igl::jet(Z,true,*C);
-
-    // Add per-vertex colors
-    viewer.data.set_colors(*C);
+    // Set callbacks
+    viewer.callback_key_down = &key_down_cb;
 
     // Launch the viewer
     viewer.launch();
@@ -87,17 +88,83 @@ int main(int argc, const char **argv)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
+void set_model_1(igl::Viewer& viewer)
+{
+    viewer.data.clear();
+    viewer.data.set_mesh(*Xv, *Xf);
+    viewer.core.align_camera_center(*Xv, *Xf);
+ 
+    // Use the z coordinate as a scalar field over the surface
+    Eigen::VectorXd Z = Xv->col(2);
+
+    // Compute per-vertex colors
+    igl::jet(Z,true,*Xc);
+
+    // Add per-vertex colors
+    viewer.data.set_colors(*Xc);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+void set_model_2(igl::Viewer& viewer)
+{
+    viewer.data.clear();
+    viewer.data.set_mesh(*Yv, *Yf);
+    viewer.core.align_camera_center(*Yv, *Yf);
+ 
+    // Use the z coordinate as a scalar field over the surface
+    Eigen::VectorXd Z = Yv->col(2);
+
+    // Compute per-vertex colors
+    igl::jet(Z,true,*Yc);
+
+    // Add per-vertex colors
+    viewer.data.set_colors(*Yc);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+bool key_down_cb(igl::Viewer& viewer, unsigned char key, int modifier)
+{
+    switch(key)
+    {
+        case '1':
+            set_model_1(viewer);
+            break;
+        case '2':
+            set_model_2(viewer);
+            break;
+        case 'q': case 'Q':
+            exit(EXIT_SUCCESS);
+        default:
+            std::cout << "please, press 1,2 or q(quit)" << std::endl;
+    }
+
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
 void read_input(int argc, const char** argv)
 {
-    std::string path = DEFAULT_MODEL_PATH;
+    std::string path1 = DEFAULT_MODEL_PATH1;
+    std::string path2 = DEFAULT_MODEL_PATH2;
 
     if(argc > 1) 
     {
         std::ifstream file(argv[1], std::ios_base::in);
         if(file.is_open()) {
-            path = argv[1];
+            path1 = argv[1];
+        }
+    }
+    if(argc > 2)
+    {
+        std::ifstream file(argv[2], std::ios_base::in);
+        if(file.is_open()) {
+            path2 = argv[2];
         }
     }
 
-    igl::readOFF(path, *V, *F);
+    igl::readOFF(path1, *Xv, *Xf);
+    igl::readOFF(path2, *Yv, *Yf);
 }
