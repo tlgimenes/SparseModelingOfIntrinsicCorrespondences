@@ -23,8 +23,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-#define DEFAULT_MODEL_PATH1 "../models/0001.affine.1.off"
-#define DEFAULT_MODEL_PATH2 "../models/0001.null.0.off"
+#define DEFAULT_MODEL_PATH1 "../../Project/code/shape_segmentation/TOSCA/shapes/cat0.off"
+#define DEFAULT_MODEL_PATH2 "../../Project/code/shape_segmentation/TOSCA/shapes/cat1.off"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +35,15 @@ std::shared_ptr<Eigen::MatrixXd> Xv, Yv;
 std::shared_ptr<Eigen::MatrixXi> Xf, Yf;
 std::shared_ptr<Eigen::MatrixXd> Xc, Yc;
 
+/**
+ * Ids of the correlated points in the two shapes
+ * */
+int id1 = 0;
+int id2 = 0;
+
+/**
+ * Future work
+ * */
 float lambda = 1;
 float mu = 1;
 
@@ -88,6 +97,31 @@ int main(int argc, const char **argv)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
+int getIndex(const Eigen::Vector3d& point, const std::shared_ptr<Eigen::MatrixXd> model)
+{
+    float curr, dist;
+    int i=0, id = 0;
+    Eigen::Vector3d d;
+
+    d = model->row(i);
+    d -= point;
+    dist = d.squaredNorm();
+    for(i=1; i < model->rows(); i++)
+    {
+        d = model->row(i);
+        d -= point;
+        curr = d.squaredNorm();
+        if( curr < dist ) {
+            id = i;
+            dist = curr;
+        }
+    }
+
+    return id;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
 void set_model_1(igl::Viewer& viewer)
 {
     viewer.data.clear();
@@ -95,7 +129,14 @@ void set_model_1(igl::Viewer& viewer)
     viewer.core.align_camera_center(*Xv, *Xf);
  
     // Use the z coordinate as a scalar field over the surface
-    Eigen::VectorXd Z = Xv->col(2);
+    Eigen::VectorXd Z = Eigen::VectorXd::Zero(Xv->rows());
+    Eigen::Vector3d point;
+
+    for(int i=0; i < Xv->rows(); i++) {
+        point = Xv->row(i) - Xv->row(id1);
+        Z(i) = point.norm();
+    }
+    Z(id1) = Z.maxCoeff();
 
     // Compute per-vertex colors
     igl::jet(Z,true,*Xc);
@@ -113,8 +154,15 @@ void set_model_2(igl::Viewer& viewer)
     viewer.core.align_camera_center(*Yv, *Yf);
  
     // Use the z coordinate as a scalar field over the surface
-    Eigen::VectorXd Z = Yv->col(2);
+    Eigen::VectorXd Z = Eigen::VectorXd::Zero(Yv->rows());
+    Eigen::Vector3d point;
 
+    for(int i=0; i < Yv->rows(); i++) {
+        point = Yv->row(i) - Yv->row(id2);
+        Z(i) = point.norm();
+    }
+    Z(id2) = Z.maxCoeff();
+    
     // Compute per-vertex colors
     igl::jet(Z,true,*Yc);
 
@@ -149,22 +197,43 @@ void read_input(int argc, const char** argv)
 {
     std::string path1 = DEFAULT_MODEL_PATH1;
     std::string path2 = DEFAULT_MODEL_PATH2;
+    bool is_num = true;
 
-    if(argc > 1) 
+    for(int i=1; i < argc; i++)
     {
-        std::ifstream file(argv[1], std::ios_base::in);
-        if(file.is_open()) {
-            path1 = argv[1];
+        if(strcmp(argv[i], "-f1") == 0) {
+            i++;
+            std::ifstream file(argv[i], std::ios_base::in);
+            if(file.is_open()) {
+                path1 = argv[i];
+            }
         }
-    }
-    if(argc > 2)
-    {
-        std::ifstream file(argv[2], std::ios_base::in);
-        if(file.is_open()) {
-            path2 = argv[2];
+        else if(strcmp(argv[i], "-f2") == 0) {
+            i++;
+            std::ifstream file(argv[i], std::ios_base::in);
+            if(file.is_open()) {
+                path2 = argv[i];
+                is_num = false;
+            }
+        }
+        else if(strcmp(argv[i], "-n1") == 0) {
+            i++;
+            id1 = std::stoi(argv[i]);
+        }
+        else if(strcmp(argv[i], "-n2") == 0) {
+            i++;
+            id2 = std::stoi(argv[4]);
+        }
+        else if(strcmp(argv[i], "-h") == 0) {
+            std::cout << "-f1 for path 1" << std::endl \
+                      << "-f2 for path 2" << std::endl \
+                      << "-n1 for index 1" << std::endl \
+                      << "-n2 for index 2" << std::endl;
         }
     }
 
     igl::readOFF(path1, *Xv, *Xf);
     igl::readOFF(path2, *Yv, *Yf);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////
