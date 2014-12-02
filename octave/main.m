@@ -42,10 +42,14 @@ k=20;    % number of eigenvectors in the base
 % Paths for shapes
 shape_path0 = '../models/TOSCA/shapes/cat0.off';
 shape_path1 = '../models/TOSCA/shapes/cat1.off';
+%shape_path0 = '../models/TOSCA/shapes/horse0.off';
+%shape_path1 = '../models/TOSCA/shapes/horse10.off';
 
 % Paths for segmentations
 segmentation_path0 = '../models/TOSCA/segmentations/cat0_wks_5_pers_8_seg.txt';
 segmentation_path1 = '../models/TOSCA/segmentations/cat1_wks_5_pers_8_seg.txt';
+%segmentation_path0 = '../models/TOSCA/segmentations/horse0_wks_5_pers_8_seg.txt';
+%segmentation_path1 = '../models/TOSCA/segmentations/horse10_wks_5_pers_8_seg.txt';
 
 % Reads the off files
 printf('Reading off files...');
@@ -88,7 +92,7 @@ alpha  = 8000;
 mu     = 100;
 epsilon = 0.1;
 
-% Evaluates the maximal value of alpha
-[V,D]=eig([[A'*A A']; [eye(7) A]]);
+% Evaluates the maximal value of alpha 
+[V,D]=eig([[A'*A A']; [eye(size(A)(1)) A]]);
 alpha_max=max(max(D));
 

@@ -222,7 +222,7 @@ void read_input(int argc, const char** argv)
         }
         else if(strcmp(argv[i], "-n2") == 0) {
             i++;
-            id2 = std::stoi(argv[4]);
+            id2 = std::stoi(argv[i]);
         }
         else if(strcmp(argv[i], "-h") == 0) {
             std::cout << "-f1 for path 1" << std::endl \
