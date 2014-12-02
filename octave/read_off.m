@@ -1,25 +1,27 @@
 %/*
 % * =====================================================================================
-% *       Filename:  eigenDecomposition.m
-% *    Description:  Decomposes the Laplacian operator L in k eigen values/eigen vectors
-% *        Created:  2014-11-25 16:45
+% *       Filename:  read_off.m
+% *    Description:  
+% *        Created:  2014-12-02 11:25
 % *         Author:  Tiago Lobato Gimenes        (tlgimenes@gmail.com)
 % * =====================================================================================
 % */
 
 %////////////////////////////////////////////////////////////////////////////////////////
 
-%%
-%   L: Laplacin
-%   k: number of eigen vectors to decompose the Laplacian
-%
-%   V: eigen vectors
-%   D: eigen values
-function [V,D]=eigenDecomposition(L, k)
+function [F,V]=read_off(filepath)
 
 %////////////////////////////////////////////////////////////////////////////////////////
 
-% Eigen values decomposition
-[V,D]=eigs(L, k, -1e-10);
+off=importdata(filepath);
+
+Vnum = off.data(1,1);
+Fnum = off.data(1,2);
+total = off.data(1,3);
+
+V=off.data(2:(Vnum+1),1:3);
+F=off.data((Vnum+2):end, 2:4) + 1; %indices begins with 1 and not 0
+
+%////////////////////////////////////////////////////////////////////////////////////////
 
 end

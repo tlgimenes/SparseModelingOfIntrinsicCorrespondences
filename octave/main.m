@@ -39,22 +39,43 @@ global segB;
 n=10000; % maximal number of iterations of the solver
 k=20;    % number of eigenvectors in the base
 
-printf('Decomposing the Laplacian of cat0...\n');
-[V0,D0,L0]=eigenDecomposition('matcat0.txt', k, 'eigencat0.txt'); % Decompose the Laplacian operator in its eigenvectors
-printf('done\n');
-printf('Decomposing the Laplacian of cat1...\n');
-[V1,D1,L1]=eigenDecomposition('matcat1.txt', k, 'eigencat1.txt'); % Decompose the Laplacian operator in its eigenvectors
+% Paths for shapes
+shape_path0 = '../models/TOSCA/shapes/cat0.off';
+shape_path1 = '../models/TOSCA/shapes/cat1.off';
+
+% Paths for segmentations
+segmentation_path0 = '../models/TOSCA/segmentations/cat0_wks_5_pers_8_seg.txt';
+segmentation_path1 = '../models/TOSCA/segmentations/cat1_wks_5_pers_8_seg.txt';
+
+% Reads the off files
+printf('Reading off files...');
+[faces0, vertices0]=read_off(shape_path0);
+[faces1, vertices1]=read_off(shape_path1);
 printf('done\n');
 
-printf('Loading segmentations...\n');
-segA = load('cat0_wks_5_pers_8_seg.txt'); % loads the segmentations
-segB = load('cat1_wks_5_pers_8_seg.txt'); % loads the segmentations
+% Calculating the laplacian matrix
+L0=laplacian(vertices0, faces0);
+L1=laplacian(vertices0, faces0);
+
+printf('Decomposing the Laplacian of shape 0...');
+[V0, D0] = eigenDecomposition(L0,k);
+printf('done\n');
+printf('Decomposing the Laplacian of shape 1...');
+[V1,D1]=eigenDecomposition(L1, k); % Decompose the Laplacian operator in its eigenvectors
 printf('done\n');
 
-printf('generating matrix A and B...\n')
+printf('Loading segmentations...');
+segA = load(segmentation_path0); % loads the segmentations
+segB = load(segmentation_path1); % loads the segmentations
+printf('done\n');
+
+printf('generating matrix A and B...')
 A=genA(V0, segA); % generates matrix A
 B=genB(V1, segB); % generates matrix B
 printf('done\n');
+
+printf('Now run <solve> and <correspond> for solving the problem and finding the correspondence\n');
+printf('Have a nice day !\n');
 
 % Sets matrices
 C = zeros(k);
@@ -69,5 +90,5 @@ epsilon = 0.1;
 
 % Evaluates the maximal value of alpha
 [V,D]=eig([[A'*A A']; [eye(7) A]]);
-alpha_max=max(max(D))
+alpha_max=max(max(D));
 
